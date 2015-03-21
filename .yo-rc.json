@@ -1,0 +1,6 @@
+{
+  "generator-modular": {
+    "name": "order-service",
+    "uxFramework": "material"
+  }
+}
