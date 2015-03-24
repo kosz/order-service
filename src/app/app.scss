@@ -14,3 +14,15 @@ body {
 .modular_content md-whiteframe p, h1, h2, h3, h4 {
   margin: 10px 10px 10px 10px;
 }
+
+.modular_content {
+  .md-tab-content, pre {
+    padding: 15px 15px 15px 15px;
+  }
+  p {
+    font-weight: normal;
+    font-size: 15px;
+  }
+}
+
+

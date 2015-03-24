@@ -1,0 +1,62 @@
+md-button.md-fab(ng-click="versionOne.reload()")
+  i.fa.fa-refresh
+  md-tooltip Refresh
+
+span &nbsp;sum is: {{versionOne.sum}}
+
+p.
+  The first version of this service, is specialized, hard codes it's back-end url, and returns a promise as requested, which asignes the returned sum to a scope property, making it availabe to the view.
+
+p.
+  order.factory.js
+
+pre.
+  angular.module('order-service').factory('one.Orders', [
+    '$http',
+    '$q',
+    function ($http,$q) {
+  
+      var promise;
+  
+      function sum (data) {
+        var sum = 0;
+        for ( var i = 0; i < data.length; i+=1 ) {
+          sum += data[i].value;
+        }
+        return sum;
+      }
+ 
+      function getSum () {
+  
+        promise = $q(function (resolve, reject) {
+          $http.get('orders.json')
+            .success(function (data) {
+              resolve(sum(data));
+            })
+            .error(function(data) {
+              reject(data);
+            });
+        });
+  
+        return promise;
+  
+      }
+  
+      return {
+        getSum: getSum
+      };
+  
+    }]);
+ 
+p.
+  And the controller implementation
+
+pre.
+  self.reload = function () {
+    Orders.getSum().then(function(sum) {
+      self.sum = sum;
+    });
+  };
+  self.reload();
+
+

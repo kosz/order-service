@@ -1,0 +1,56 @@
+md-button.md-fab(ng-click="versionTwo.reload()")
+  i.fa.fa-refresh
+  md-tooltip Refresh
+
+span &nbsp;sum is: {{versionTwo.data.$sum}}
+
+p.
+  Handling the promise within our controller created some coupling, and muddied the controller code with external concerns. Here is a second iteration of achieving the same result, by encapsulating the assignment from the promise inside the service. By using this aproach, we can now use this as a global service, and any controller implementing it in the same way, would recalculate if asked, while the change will be reflected on all the other controllers using the service.
+
+pre.
+  order.factory.js
+    angular.module('order-service').factory('two.Orders', [
+      '$http',
+      function ($http) {
+
+        var obj = {};
+
+        function sum (data) {
+          obj.$sum = 0;
+          for ( var i = 0; i < data.length; i+=1 ) {
+            obj.$sum += data[i].value;
+          }
+        }
+
+        function error (data) {
+          throw new Error('Server error occured ' + data);
+        }
+
+        function getRandomInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function get () {
+
+          $http.get('orders.json')
+            .success(function(data){
+              sum(data);
+            })
+            .error(error);
+
+          return obj;
+
+        }
+
+        return {
+          get: get
+        };
+
+      }]);
+
+p.
+  Now our controller implementation is a lot thinner.
+
+pre.
+  self.data = Orders.get();
+  self.reload = Orders.get;
