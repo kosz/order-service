@@ -1,55 +1,56 @@
 p.
-  The last iteration felt better, however looking at this with a critical eye, it feels like there's still lots of room for improvement. One thing that looks awkward is this Service specialization, where we have a service that 1) makes a restfull call, 2) processes data based on the restfull call ... 
+  The last iteration felt better, however looking at this with a critical eye, it feels like there's still lots of room for improvement. One thing that looks awkward is this Service specialization, where we have a service that 1) makes a restfull call, 2) processes data based on the restfull call ...
 
 p.
-  So now if we want to write a second service, that uses the same Restful end point, we would be duplicating the concern handling the restfull call. Not only that, but with quite a few good Angular Restful solutions available, our Orders sum service may be duplicating mature code that already exists in the Open Source Realm.  
+  So now if we want to write a second service, that uses the same Restful end point, we would be duplicating the concern handling the restfull call. Not only that, but with quite a few good Angular Restful solutions available, our Orders sum service may be duplicating mature code that already exists in the Open Source Realm.
 
 p.
-  Another consideration is the sum() concern. Combining the sum() with get() within the same concern isn't ideal. We know that we want to separate concerns, we know that maybe we want to run sum() on some other Restful Resources for example Items. But what about other calculations on Restful resource data ? What if we want a count of sorts ? 
+  Another consideration is the sum() concern. Combining the sum() with get() within the same concern isn't ideal. We know that we want to separate concerns, we know that maybe we want to run sum() on some other Restful Resources for example Items. But what about other calculations on Restful resource data ? What if we want a count of sorts ?
 
-p. 
-  Being able to modularize these data query concerns and use as many as we want, on top of whatever resource we want, would definitely help our code base stay clean and maintainable. Ideally we could use the dot notation trick to return empty objects that get updated on the scope. This way we could run code like : 
+p.
+  Being able to modularize these data query concerns and use as many as we want, on top of whatever resource we want, would definitely help our code base stay clean and maintainable. Ideally we could use the dot notation trick to return empty objects that get updated on the scope. This way we could run code like :
 
 pre(ng-non-bindable).
   self.orders = Orders.get().sum('value').count('cancelled')
 
 p.
-  Then have the two way binding magic done, cross controller, by binding things in the view like so : 
+  Then have the two way binding magic done, cross controller, by binding things in the view like so :
 
 pre(ng-non-bindable).
   All our order objects: {{vm.orders.$results}}
-  The sum of all values sum : {{vm.orders.$sum.value}} 
-  The number of cancelled values : {{vm.orders.$count.cancelled}} 
+  The sum of all values sum : {{vm.orders.$sum.value}}
+  The number of cancelled values : {{vm.orders.$count.cancelled}}
 
 p.
-  And if we ever call Orders.get() inside any of the controllers using the service, then all scope variables across the board would automatically update. 
-p. 
-  Building on top of what Restangular does, this seems to be an interesting idea worth pursueing. This idea came to me as I was thinking of question (1) so it's a fresh thing. The only prototype code I have is the following. I made it work, and I am pretty optimistic about being able to create a very modular method of attaching computational concerns on top of Resource objects, if given the time. 
+  And if we ever call Orders.get() inside any of the controllers using the service, then all scope variables across the board would automatically update.
+p.
+  Building on top of what Restangular does, this seems to be an interesting idea worth pursueing. This idea came to me as I was thinking of question (1) so it's a fresh thing. The only prototype code I have is the following. I made it work, and I am pretty optimistic about being able to create a very modular method of attaching computational concerns on top of Resource objects, if given the time.
 
-pre. 
+p ( warning messy, unrefactored code )
+pre.
   angular.module('order-service').factory('Orders', [
     '$http',
     '$rootScope',
     function ($http,$rootScope) {
-  
+
       function all () {
         var obj = {
           $data: {}
         };
-  
+
         obj.sum = function () {
           $rootScope.$watch( function () { return obj.$collection; }, function (n) {
             if (!n) { return; }
-            obj.$result = 0 
+            obj.$result = 0
             for ( var i = 0; i < n.length; i+=1 ) {
               r += n[i].value;
             }
           });
           return obj;
         };
-  
+
         var urls = [ 'orders.json', 'orders2.json' ];
-  
+
         $http.get(urls[getRandomInt(0,1)])
           .success(function(data) {
             obj.$collection = data;
@@ -57,20 +58,20 @@ pre.
           .error(function(data) {
             throw new Error('Server error occured ' + data);
           });
-  
+
           function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
           }
-  
+
         return obj;
-  
+
       }
-  
+
       return {
         all: all
       };
-  
-    }]); 
 
-p. 
-  Given time constraints, I will not separate this code into multiple services/concerns that work together, however one can anticipate how this system can be organized and written based on this strategy. For the record I am a bit uneasy by using that $watcher in this case, and the async code would cause issues, if the $http.get would hit the server faster than the $watcher can be setup, however that's highly unlikely. My testing of this code so far has been positive, but as always with software and technology: Never say never. 
+    }]);
+
+p.
+  Given time constraints, I will not separate this code into multiple services/concerns that work together, however one can anticipate how this system can be organized and written based on this strategy. For the record I am a bit uneasy by using that $watcher in this case, and the async code would cause issues, if the $http.get would hit the server faster than the $watcher can be setup, however that's highly unlikely. My testing of this code so far has been positive, but as always with software and technology: Never say never.
